@@ -1,17 +1,13 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+
 final FirebaseAuth _auth = FirebaseAuth.instance;
 
-final GoogleSignIn googleSignIn = GoogleSignIn();
-final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
-final CollectionReference collectionReference =
-    FirebaseFirestore.instance.collection("users");
-
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(new MaterialApp(
     home: MyHomePage(),
   ));
@@ -27,6 +23,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   User currenUser;
   SharedPreferences preferences;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -42,9 +39,7 @@ class _MyHomePageState extends State<MyHomePage> {
           FlatButton(
             child: Text("Signin Google"),
             color: Colors.orange,
-            onPressed: () {
-              _signinGoogle();
-            },
+            onPressed: () {},
           ),
 
           //
@@ -52,37 +47,49 @@ class _MyHomePageState extends State<MyHomePage> {
           FlatButton(
             child: Text("Signin With Email"),
             color: Colors.blue,
-            onPressed: () {},
+            onPressed: () {
+              _signInWithEmail();
+            },
           ),
 
-//
+          //
 
           FlatButton(
-            child: Text("Signin Up"),
+            child: Text("Signin Up Email"),
             color: Colors.greenAccent,
-            onPressed: () {},
+            onPressed: () {
+              // fbAuth.signUp(
+              //     email: " mr.phyo.1571993mm@gmial.com",
+              //     password: "@PyAePhYoWiNpYaEpHyOwIn@");
+              _signUp();
+            },
           )
         ],
       ),
     );
   }
 
-  Future<User> _signinGoogle() async {
-    preferences = await SharedPreferences.getInstance();
-    GoogleSignInAccount googleSignInAccount = await googleSignIn.signIn();
-    GoogleSignInAuthentication authentication =
-        await googleSignInAccount.authentication;
-    final AuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: authentication.accessToken,
-        idToken: authentication.idToken);
-
-    User fbUser = (await firebaseAuth.signInWithCredential(credential)).user;
-
-    if (fbUser != null) {
-      print("User id is ===>> ${fbUser.uid}");
-      print("User id is ===>> ${fbUser.displayName}");
+  void _signInWithEmail() async {
+    try {
+      User user = (await _auth.signInWithEmailAndPassword(
+              email: "mgmg@gmail.com", password: "mgmg123"))
+          .user;
+      print("Success sign in");
+      print("Login User is ==>> ${user.email}");
+    } catch (e) {
+      print(e.message);
+      print("no success sing in");
     }
+  }
 
-    return fbUser;
+  void _signUp() async {
+    try {
+      await _auth.createUserWithEmailAndPassword(
+          email: "baybay@gmail.com", password: "baybay123");
+      print("Success sign Sign Up");
+    } catch (e) {
+      print(e.message);
+      print("no success sing in");
+    }
   }
 }
