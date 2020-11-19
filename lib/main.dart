@@ -1,9 +1,12 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final FirebaseAuth _auth = FirebaseAuth.instance;
+final GoogleSignIn _gSignIn = GoogleSignIn();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,13 +22,13 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  // final GlobalKey<FormState> _globalKey =
-
   User currenUser;
   SharedPreferences preferences;
 
   @override
   Widget build(BuildContext context) {
+    var firesteoreDb =
+        FirebaseFirestore.instance.collection("board").snapshots();
     return Scaffold(
       appBar: AppBar(
         title: Text("Board"),
@@ -39,7 +42,9 @@ class _MyHomePageState extends State<MyHomePage> {
           FlatButton(
             child: Text("Signin Google"),
             color: Colors.orange,
-            onPressed: () {},
+            onPressed: () {
+              _googleSignIn();
+            },
           ),
 
           //
@@ -58,10 +63,27 @@ class _MyHomePageState extends State<MyHomePage> {
             child: Text("Signin Up Email"),
             color: Colors.greenAccent,
             onPressed: () {
-              // fbAuth.signUp(
-              //     email: " mr.phyo.1571993mm@gmial.com",
-              //     password: "@PyAePhYoWiNpYaEpHyOwIn@");
               _signUp();
+            },
+          ),
+
+          //
+
+          FlatButton(
+            child: Text("Sign Out Goolge"),
+            color: Colors.greenAccent,
+            onPressed: () {
+              _signOutG();
+            },
+          ),
+
+          //
+
+          FlatButton(
+            child: Text("Firestoore"),
+            color: Colors.greenAccent,
+            onPressed: () {
+              _firestoreDBTest();
             },
           )
         ],
@@ -92,4 +114,42 @@ class _MyHomePageState extends State<MyHomePage> {
       print("no success sing in");
     }
   }
+
+  Future _googleSignIn() async {
+    try {
+      GoogleSignInAccount signAc = await _gSignIn.signIn();
+      GoogleSignInAuthentication gAuth = await signAc.authentication;
+      AuthCredential authCredential = GoogleAuthProvider.credential(
+          idToken: gAuth.idToken, accessToken: gAuth.accessToken);
+
+      UserCredential userCredential =
+          await _auth.signInWithCredential(authCredential);
+      User user = userCredential.user;
+
+      assert(user.displayName != null);
+      assert(user.email != null);
+      // assert(user.photoURL != null);
+
+      print(user.email.toString());
+      print(user.displayName.toString());
+
+      User currentUser = _auth.currentUser;
+      assert(currenUser.email == user.email);
+      print(currentUser.email.toUpperCase());
+      print("Successfully SignIn");
+    } catch (e) {
+      print("NOt Success Sign In");
+    }
+  }
+
+  Future _signOutG() async {
+    try {
+      await _gSignIn.signOut();
+      print("G sign out success");
+    } catch (e) {
+      print("G sign out not success");
+    }
+  }
+
+  void _firestoreDBTest() {}
 }
